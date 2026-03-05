@@ -2,7 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Tube - Mi Canal y Videos Infinitos</title>
+    <title>Tube - Mi Canal Oficial</title>
+    <script src="https://www.gstatic.com"></script>
+    <script src="https://www.gstatic.com"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: #0f0f0f; color: white; font-family: 'Roboto', sans-serif; }
@@ -18,6 +20,10 @@
         .video-wrapper { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; overflow: hidden; }
         video { width: 100%; height: 100%; }
 
+        .live-stats { background: #1a1a1a; padding: 8px 12px; border-radius: 8px; margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #333; }
+        .live-dot { width: 8px; height: 8px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 5px #00ff00; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
         .video-actions { margin-top: 15px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #333; padding-bottom: 15px; }
         .like-btn { background:#272727; border-radius:20px; padding:8px 15px; border:none; color:white; cursor:pointer; }
 
@@ -31,7 +37,7 @@
         .gold-border { border: 2px solid #ffd700 !important; box-shadow: 0 0 10px #ffd700; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-box { background: #1e1e1e; padding: 30px; border-radius: 15px; width: 95%; max-width: 800px; display: flex; flex-direction: column; gap: 15px; text-align: center; max-height: 80vh; overflow-y: auto; }
+        .modal-box { background: #1e1e1e; padding: 30px; border-radius: 15px; width: 95%; max-width: 600px; display: flex; flex-direction: column; gap: 15px; text-align: center; max-height: 80vh; overflow-y: auto; }
         input { background: #121212; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; }
         
         #achievement { display: none; position: fixed; top: 70px; right: 20px; background: linear-gradient(45deg, #ffd700, #ffa500); color: #000; padding: 15px 25px; border-radius: 10px; font-weight: bold; z-index: 3000; animation: slideIn 0.5s; }
@@ -48,6 +54,7 @@
         <div class="logo-text">Tube</div>
     </div>
     <div>
+        <button class="btn" style="background:none; color:#aaa; font-size:0.8rem;" onclick="openModal('aboutModal')">Acerca de</button>
         <span id="userBadge" onclick="showMyChannel()"></span>
         <button id="authBtn" class="btn" style="border:1px solid #3ea6ff; color:#3ea6ff; background:none" onclick="openModal('authModal')">Crear cuenta</button>
         <button id="uploadBtn" class="btn btn-red" style="display:none; margin-left:10px;" onclick="openModal('uploadModal')">Subir</button>
@@ -58,34 +65,39 @@
     <div class="video-wrapper">
         <video id="mainPlayer" controls onended="markAsWatched()"></video>
     </div>
+
+    <div class="live-stats">
+        <div class="live-dot"></div>
+        <span style="font-size: 0.8rem;"><span id="channelCount">0</span> canales conectados ahora</span>
+    </div>
+
     <div class="video-actions">
-        <div><h1 id="displayTitle">Cargando...</h1><p id="displayVistas" style="color:#aaa; font-size: 0.85rem;">0 vistas • --</p></div>
+        <div><h1 id="displayTitle">Bienvenido a Tube</h1><p id="displayVistas" style="color:#aaa; font-size: 0.85rem; margin-top: 4px;">0 vistas • --</p></div>
         <button class="like-btn" onclick="saveLike()">👍 <span id="likeDisplay">0</span></button>
     </div>
+
     <div id="commentsArea" style="display:none; margin-top:20px;">
         <h3>Comentarios</h3>
         <input type="text" id="commentInput" class="comment-input" placeholder="Añade un comentario..." onkeypress="if(event.key === 'Enter') postComment()">
         <div id="commentsList"></div>
     </div>
+
     <h3>Tendencias Globales</h3>
     <div class="grid" id="recommendGrid"></div>
 </main>
 
-<!-- MODAL MI CANAL (TODOS LOS VIDEOS) -->
-<div id="channelModal" class="modal">
-    <div class="modal-box">
-        <h2 id="channelName">Mi Canal</h2>
-        <p>Total de Likes: <span id="totalLikes" style="color:#ffd700">0</span></p>
-        <div class="grid" id="channelVideosGrid"></div>
-        <button class="btn btn-red" onclick="closeModal('channelModal')">Cerrar</button>
-    </div>
-</div>
-
+<!-- MODALES -->
+<div id="aboutModal" class="modal"><div class="modal-box" style="text-align:left;"><h2>Acerca de Tube</h2><p>Tus videos se guardan en IndexedDB. ¡Llega a 100 likes para el borde de oro!</p><button class="btn btn-red" onclick="closeModal('aboutModal')">Cerrar</button></div></div>
+<div id="channelModal" class="modal"><div class="modal-box"><h2>Mi Canal</h2><p>Likes: <span id="totalLikes" style="color:#ffd700">0</span></p><div class="grid" id="channelVideosGrid"></div><button class="btn btn-red" onclick="closeModal('channelModal')">Cerrar</button></div></div>
 <div id="authModal" class="modal"><div class="modal-box"><h3>Nombre Canal</h3><input type="text" id="username"><button class="btn btn-red" onclick="register()">Aceptar</button></div></div>
 <div id="uploadModal" class="modal"><div class="modal-box"><h3>Subir</h3><input type="text" id="vTitle"><input type="file" id="vFile" accept="video/*"><button id="publishBtn" class="btn btn-red" onclick="publish()">Publicar</button></div></div>
 
 <script>
+    const firebaseConfig = { apiKey: "TU_API", databaseURL: "https://TU_URL.firebaseio.com", projectId: "TU_ID" };
+    firebase.initializeApp(firebaseConfig);
+    const rdb = firebase.database();
     let db, currentVideoId = null;
+
     const request = indexedDB.open("TubeDB", 1);
     request.onupgradeneeded = e => {
         db = e.target.result;
@@ -99,9 +111,12 @@
             document.getElementById('userBadge').innerText = u;
             document.getElementById('authBtn').style.display = 'none';
             document.getElementById('uploadBtn').style.display = 'inline-block';
-            document.getElementById('displayTitle').innerText = "Selecciona un video de tu canal";
+            const conRef = rdb.ref('connections').push();
+            conRef.onDisconnect().remove();
+            conRef.set({ user: u });
+            rdb.ref('connections').on('value', snap => document.getElementById('channelCount').innerText = snap.numChildren());
         }
-        for(let i=0; i<8; i++) addMoreVideos();
+        addMoreVideos();
     }
 
     function register() {
@@ -113,8 +128,9 @@
         const f = document.getElementById('vFile').files;
         const t = document.getElementById('vTitle').value;
         if(f && t) {
+            const id = Date.now();
             const transaction = db.transaction(["videos"], "readwrite");
-            transaction.objectStore("videos").add({ id: Date.now(), title: t, file: f[0], timestamp: Date.now(), likes: 0, views: 0, comments: [] });
+            transaction.objectStore("videos").add({ id, title: t, file: f, timestamp: id, likes: 0, views: 0, comments: [] });
             transaction.oncomplete = () => location.reload();
         }
     }
@@ -126,26 +142,18 @@
         db.transaction(["videos"]).objectStore("videos").openCursor().onsuccess = e => {
             const cursor = e.target.result;
             if (cursor) {
-                const v = cursor.value;
-                total += v.likes;
-                const card = document.createElement('div');
-                card.className = 'card';
+                const v = cursor.value; total += v.likes;
+                const card = document.createElement('div'); card.className = 'card';
                 card.onclick = () => { playVideo(v.id); closeModal('channelModal'); };
-                const gold = v.likes >= 100 ? 'gold-border' : '';
-                card.innerHTML = `<div class="thumb ${gold}" style="background:#222">▶</div><h4>${v.title}</h4><p>${v.likes} likes</p>`;
-                grid.prepend(card);
-                cursor.continue();
-            } else {
-                document.getElementById('totalLikes').innerText = total;
-                openModal('channelModal');
-            }
+                card.innerHTML = `<div class="thumb ${v.likes >= 100 ? 'gold-border' : ''}" style="background:#222">▶</div><h4>${v.title}</h4>`;
+                grid.prepend(card); cursor.continue();
+            } else { document.getElementById('totalLikes').innerText = total; openModal('channelModal'); }
         };
     }
 
     function playVideo(id) {
         db.transaction(["videos"]).objectStore("videos").get(id).onsuccess = e => {
-            const v = e.target.result;
-            currentVideoId = v.id;
+            const v = e.target.result; currentVideoId = v.id;
             document.getElementById('mainPlayer').src = URL.createObjectURL(v.file);
             document.getElementById('displayTitle').innerText = v.title;
             document.getElementById('displayVistas').innerText = `${v.views} vistas • ${getTimeAgo(v.timestamp)}`;
@@ -163,23 +171,17 @@
         if(!text || !currentVideoId) return;
         const store = db.transaction(["videos"], "readwrite").objectStore("videos");
         store.get(currentVideoId).onsuccess = e => {
-            const v = e.target.result;
-            if(!v.comments) v.comments = [];
+            const v = e.target.result; if(!v.comments) v.comments = [];
             v.comments.push({ id: Date.now(), user, text, likes: 0 });
-            store.put(v);
-            document.getElementById('commentInput').value = "";
-            renderComments(v.comments);
+            store.put(v); document.getElementById('commentInput').value = ""; renderComments(v.comments);
         };
     }
 
     function renderComments(arr) {
-        const list = document.getElementById('commentsList');
-        list.innerHTML = "";
+        const list = document.getElementById('commentsList'); list.innerHTML = "";
         arr.forEach(c => {
-            const div = document.createElement('div');
-            div.className = 'comment-item';
-            div.innerHTML = `<p><b>@${c.user}</b>: ${c.text}</p>`;
-            list.prepend(div);
+            const div = document.createElement('div'); div.className = 'comment-item';
+            div.innerHTML = `<p><b>@${c.user}</b>: ${c.text}</p>`; list.prepend(div);
         });
     }
 
@@ -201,23 +203,15 @@
         };
     }
 
-    function getTimeAgo(t) {
-        const s = Math.floor((Date.now() - t) / 1000);
-        if (s < 60) return `hace ${s} seg`;
-        return `hace ${Math.floor(s/60)} min`;
-    }
-
+    function getTimeAgo(t) { return `hace ${Math.floor((Date.now()-t)/1000)} seg`; }
     function addMoreVideos() {
         const grid = document.getElementById('recommendGrid');
         for(let i=0; i<4; i++) {
-            const v = Math.floor(Math.random()*2000000+445000);
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `<div class="thumb" style="background-image:url('https://picsum.photos{Math.random()}')"></div><h4>Tendencia</h4><p>${v >= 1000000 ? (v/1000000).toFixed(1)+' M' : (v/1000).toFixed(0)+' k'} vistas</p>`;
+            const card = document.createElement('div'); card.className = 'card';
+            card.innerHTML = `<div class="thumb" style="background-image:url('https://picsum.photos{Math.random()}')"></div><h4>Tendencia</h4>`;
             grid.appendChild(card);
         }
     }
-
     window.onscroll = () => { if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) addMoreVideos(); };
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
