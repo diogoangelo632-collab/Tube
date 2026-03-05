@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Tube - Versión Final Infinita</title>
+    <title>Tube</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: #0f0f0f; color: white; font-family: 'Roboto', sans-serif; }
@@ -75,13 +75,23 @@
 
 <div id="statsModal" class="modal"><div class="modal-box"><h2 id="statsName">Canal</h2><p style="font-size: 1.5rem;">Likes Totales: <span id="totalLikes" style="color:#ffd700">0</span></p><button class="btn btn-red" onclick="closeModal('statsModal')">Cerrar</button></div></div>
 <div id="authModal" class="modal"><div class="modal-box"><h3>Nombre Canal</h3><input type="text" id="username"><button class="btn btn-red" onclick="register()">Aceptar</button></div></div>
-<div id="uploadModal" class="modal"><div class="modal-box"><h3>Subir</h3><input type="text" id="vTitle"><input type="file" id="vFile" accept="video/*"><button id="publishBtn" class="btn btn-red" onclick="publish()">Publicar</button></div></div>
+<div id="uploadModal" class="modal"><div class="modal-box"><h3>Subir Video</h3><input type="text" id="vTitle" placeholder="Título"><input type="file" id="vFile" accept="video/*"><button id="publishBtn" class="btn btn-red" onclick="publish()">Publicar</button></div></div>
 
 <script>
     let db, currentVideoId = null;
+
+    // --- INDEXEDDB CORRECTO ---
     const request = indexedDB.open("TubeDB", 1);
-    request.onupgradeneeded = e => e.target.result.createObjectStore("videos", { keyPath: "id" });
-    request.onsuccess = e => { db = e.target.result; init(); };
+    request.onupgradeneeded = e => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains("videos")) {
+            db.createObjectStore("videos", { keyPath: "id" });
+        }
+    };
+    request.onsuccess = e => { 
+        db = e.target.result; 
+        init(); 
+    };
 
     function init() {
         const u = localStorage.getItem('tubeUser');
@@ -91,7 +101,7 @@
             document.getElementById('uploadBtn').style.display = 'inline-block';
         }
         renderMyVideos();
-        for(let i=0; i<8; i++) addMoreVideos(); // Carga inicial
+        addMoreVideos();
     }
 
     function register() {
@@ -103,28 +113,32 @@
         const f = document.getElementById('vFile').files;
         const t = document.getElementById('vTitle').value;
         if(f && t) {
+            const id = Date.now();
             const transaction = db.transaction(["videos"], "readwrite");
-            transaction.objectStore("videos").add({ id: Date.now(), title: t, file: f, timestamp: Date.now(), likes: 0, views: 0, comments: [] });
+            transaction.objectStore("videos").add({ id, title: t, file: f[0], timestamp: Date.now(), likes: 0, views: 0, comments: [] });
             transaction.oncomplete = () => location.reload();
         }
     }
 
     function renderMyVideos() {
         const grid = document.getElementById('myVideosGrid'); grid.innerHTML = "";
-        db.transaction(["videos"]).objectStore("videos").openCursor().onsuccess = e => {
+        const transaction = db.transaction(["videos"], "readonly");
+        transaction.objectStore("videos").openCursor().onsuccess = e => {
             const cursor = e.target.result;
             if (cursor) {
                 const v = cursor.value;
                 const card = document.createElement('div'); card.className = 'card';
                 card.onclick = () => playVideo(v.id);
-                card.innerHTML = `<div class="thumb ${v.likes >= 100 ? 'gold-border' : ''}" style="background:#222">▶</div><h4>${v.title}</h4><p>${v.views} vistas • ${getTimeAgo(v.timestamp)}</p>`;
+                const gold = v.likes >= 100 ? 'gold-border' : '';
+                card.innerHTML = `<div class="thumb ${gold}" style="background:#222">▶</div><h4>${v.title}</h4><p>${v.views} vistas • ${getTimeAgo(v.timestamp)}</p>`;
                 grid.prepend(card); cursor.continue();
             }
         };
     }
 
     function playVideo(id) {
-        db.transaction(["videos"]).objectStore("videos").get(id).onsuccess = e => {
+        const transaction = db.transaction(["videos"], "readonly");
+        transaction.objectStore("videos").get(id).onsuccess = e => {
             const v = e.target.result; currentVideoId = v.id;
             document.getElementById('mainPlayer').src = URL.createObjectURL(v.file);
             document.getElementById('displayTitle').innerText = v.title;
@@ -141,7 +155,8 @@
         const text = document.getElementById('commentInput').value;
         const user = localStorage.getItem('tubeUser') || "Anónimo";
         if(!text || !currentVideoId) return;
-        const store = db.transaction(["videos"], "readwrite").objectStore("videos");
+        const transaction = db.transaction(["videos"], "readwrite");
+        const store = transaction.objectStore("videos");
         store.get(currentVideoId).onsuccess = e => {
             const v = e.target.result; if(!v.comments) v.comments = [];
             v.comments.push({ id: Date.now(), user, text, likes: 0 });
@@ -159,7 +174,9 @@
     }
 
     function saveLike() {
-        const store = db.transaction(["videos"], "readwrite").objectStore("videos");
+        if(!currentVideoId) return;
+        const transaction = db.transaction(["videos"], "readwrite");
+        const store = transaction.objectStore("videos");
         store.get(currentVideoId).onsuccess = e => {
             const v = e.target.result; v.likes++;
             if(v.likes === 100) { document.getElementById('achievement').style.display='block'; setTimeout(()=>document.getElementById('achievement').style.display='none', 5000); }
@@ -168,7 +185,9 @@
     }
 
     function markAsWatched() {
-        const store = db.transaction(["videos"], "readwrite").objectStore("videos");
+        if(!currentVideoId) return;
+        const transaction = db.transaction(["videos"], "readwrite");
+        const store = transaction.objectStore("videos");
         store.get(currentVideoId).onsuccess = e => {
             const v = e.target.result; v.views++; store.put(v);
         };
@@ -181,7 +200,7 @@
 
     function addMoreVideos() {
         const grid = document.getElementById('recommendGrid');
-        for(let i=0; i<4; i++) {
+        for(let i=0; i<8; i++) {
             const v = Math.floor(Math.random()*2000000+445000);
             const card = document.createElement('div');
             card.className = 'card';
@@ -197,7 +216,7 @@
     function showStats() {
         const u = localStorage.getItem('tubeUser');
         let total = 0;
-        db.transaction(["videos"]).objectStore("videos").openCursor().onsuccess = e => {
+        db.transaction(["videos"], "readonly").objectStore("videos").openCursor().onsuccess = e => {
             const cursor = e.target.result;
             if(cursor) { total += cursor.value.likes; cursor.continue(); }
             else { document.getElementById('statsName').innerText = "Canal de " + u; document.getElementById('totalLikes').innerText = total; openModal('statsModal'); }
