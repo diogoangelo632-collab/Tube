@@ -2,8 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Tube</title>
-    <!-- Firebase (Cargado de forma que no bloquee nada) -->
+    <title>Tube - Explora canales</title>
     <script src="https://www.gstatic.com"></script>
     <script src="https://www.gstatic.com"></script>
     <style>
@@ -16,43 +15,29 @@
         .btn { border: none; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-weight: bold; }
         .btn-red { background: #cc0000; color: white; }
         #userBadge { color: #3ea6ff; font-weight: bold; cursor: pointer; text-decoration: underline; margin-right: 10px; }
-        
         main { padding-top: 80px; max-width: 1100px; margin: 0 auto; padding-inline: 20px; }
         .video-wrapper { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden; }
         video { width: 100%; height: 100%; }
 
-        /* Stats */
+        /* Contador Real-Time */
         .live-stats { background: #1a1a1a; padding: 8px 12px; border-radius: 8px; margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #333; }
         .live-dot { width: 8px; height: 8px; background: #00ff00; border-radius: 50%; box-shadow: 0 0 5px #00ff00; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
         .video-actions { margin-top: 15px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #333; padding-bottom: 15px; }
-        .like-btn { background:#272727; border-radius:20px; padding:8px 15px; border:none; color:white; cursor:pointer; }
-
-        /* Comentarios */
-        .comments-section { margin-top: 20px; border-bottom: 1px solid #333; padding-bottom: 20px; }
-        .comment-input { width: 100%; background: none; border: none; border-bottom: 1px solid #333; color: white; padding: 10px 0; outline: none; margin-bottom: 15px; }
-        .comment-item { margin-bottom: 15px; background: #111; padding: 10px; border-radius: 8px; }
-        .comment-reacts { display: flex; gap: 15px; font-size: 0.8rem; color: #aaa; margin-top: 8px; cursor: pointer; }
-
-        /* Grids */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; margin-top: 20px; margin-bottom: 40px; }
         .card { cursor: pointer; }
-        .thumb { width: 100%; aspect-ratio: 16/9; background: #222; border-radius: 10px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; border: 2px solid transparent; }
+        .thumb { width: 100%; aspect-ratio: 16/9; background: #222; border-radius: 10px; margin-bottom: 8px; background-size: cover; border: 2px solid transparent; }
         .gold-border { border: 2px solid #ffd700 !important; box-shadow: 0 0 10px #ffd700; }
-
-        /* Modales */
+        
+        /* Comentarios */
+        .comment-item { background: #111; padding: 10px; border-radius: 8px; margin-top: 10px; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; }
         .modal-box { background: #1e1e1e; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; text-align: center; }
         input { background: #121212; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; }
-        
-        #achievement { display: none; position: fixed; top: 70px; right: 20px; background: linear-gradient(45deg, #ffd700, #ffa500); color: #000; padding: 15px 25px; border-radius: 10px; font-weight: bold; z-index: 3000; animation: slideIn 0.5s; }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
     </style>
 </head>
 <body>
-
-<div id="achievement">🏆 ¡Logro! Conseguiste 100 likes en este video</div>
 
 <header>
     <div class="logo-container" onclick="location.reload()">
@@ -73,216 +58,135 @@
 
     <div class="live-stats">
         <div class="live-dot"></div>
-        <span style="font-size: 0.8rem;"><span id="channelCount">0</span> canales registrados</span>
+        <span style="font-size: 0.8rem;"><span id="channelCount">1</span> canal conectado ahora</span>
     </div>
 
     <div class="video-actions">
-        <div>
-            <h1 id="displayTitle">Cargando Tube...</h1>
-            <p id="displayVistas" style="color:#aaa; font-size: 0.85rem; margin-top: 4px;">0 vistas • --</p>
-        </div>
-        <button class="like-btn" onclick="saveLike()">👍 <span id="likeDisplay">0</span></button>
+        <div><h1 id="displayTitle">Cargando...</h1><p id="displayVistas" style="color:#aaa; font-size: 0.85rem;">0 vistas</p></div>
+        <button class="btn" style="background:#272727; color:white;" onclick="saveLike()">👍 <span id="likeDisplay">0</span></button>
     </div>
 
-    <div class="comments-section" id="commentsArea" style="display:none;">
+    <div id="commentsArea" style="display:none; margin-top:20px;">
         <h3>Comentarios</h3>
-        <input type="text" id="commentInput" class="comment-input" placeholder="Añade un comentario..." onkeypress="if(event.key === 'Enter') postComment()">
+        <input type="text" id="commentInput" style="width:100%; background:none; border:none; border-bottom:1px solid #333; color:white; padding:10px 0; outline:none;" placeholder="Escribe..." onkeypress="if(event.key === 'Enter') postComment()">
         <div id="commentsList"></div>
     </div>
 
-    <h3>Mis Videos (Canal)</h3>
-    <div class="grid" id="myVideosGrid"></div>
-    <h3>Tendencias Globales</h3>
-    <div class="grid" id="recommendGrid"></div>
+    <h3>Mis Videos</h3><div class="grid" id="myVideosGrid"></div>
 </main>
 
-<div id="statsModal" class="modal"><div class="modal-box"><h2 id="statsName">Canal</h2><p style="font-size: 1.5rem;">Likes Totales: <span id="totalLikes" style="color:#ffd700">0</span></p><button class="btn btn-red" onclick="closeModal('statsModal')">Cerrar</button></div></div>
-<div id="authModal" class="modal"><div class="modal-box"><h3>Nombre del Canal</h3><input type="text" id="username"><button class="btn btn-red" onclick="register()">Aceptar</button></div></div>
-<div id="uploadModal" class="modal"><div class="modal-box"><h3>Subir Video</h3><input type="text" id="vTitle" placeholder="Título"><input type="file" id="vFile" accept="video/*"><button id="publishBtn" class="btn btn-red" onclick="publish()">Publicar</button></div></div>
+<div id="authModal" class="modal"><div class="modal-box"><h3>Nombre Canal</h3><input type="text" id="username"><button class="btn btn-red" onclick="register()">Aceptar</button></div></div>
+<div id="uploadModal" class="modal"><div class="modal-box"><h3>Subir</h3><input type="text" id="vTitle"><input type="file" id="vFile" accept="video/*"><button class="btn btn-red" onclick="publish()">Publicar</button></div></div>
 
 <script>
-    let db;
-    let currentVideoId = null;
+    // CONFIGURACIÓN FIREBASE (Usa Realtime Database para el contador)
+    const firebaseConfig = { apiKey: "TU_API", databaseURL: "https://TU_PROYECTO.firebaseio.com", projectId: "TU_ID" };
+    firebase.initializeApp(firebaseConfig);
+    const rdb = firebase.database();
 
-    // --- 1. LOCAL DATA FIRST (No depende de Firebase para arrancar) ---
+    let db, currentVideoId = null;
+
+    // INDEXEDDB
     const request = indexedDB.open("TubeDB", 1);
-    request.onupgradeneeded = e => {
-        db = e.target.result;
-        db.createObjectStore("videos", { keyPath: "id" });
-    };
-    request.onsuccess = e => {
-        db = e.target.result;
-        initTube();
-    };
+    request.onupgradeneeded = e => e.target.result.createObjectStore("videos", { keyPath: "id" });
+    request.onsuccess = e => { db = e.target.result; init(); };
 
-    function initTube() {
+    function init() {
         const u = localStorage.getItem('tubeUser');
         if(u) {
             document.getElementById('userBadge').innerText = u;
             document.getElementById('authBtn').style.display = 'none';
             document.getElementById('uploadBtn').style.display = 'inline-block';
-            document.getElementById('displayTitle').innerText = "Selecciona un video";
-        } else {
-            document.getElementById('displayTitle').innerText = "Bienvenido a Tube";
+            
+            // Contador Real-Time de Conexiones
+            const conRef = rdb.ref('connections').push();
+            conRef.setValue({ user: u });
+            conRef.onDisconnect().remove();
+            rdb.ref('connections').on('value', snap => {
+                document.getElementById('channelCount').innerText = snap.numChildren();
+            });
         }
         renderMyVideos();
-        loadRec();
-        initFirebase(); // Solo se inicia después de lo local
     }
 
-    // --- 2. FIREBASE (Opcional, no rompe el sitio si fallan las llaves) ---
-    function initFirebase() {
-        try {
-            const config = { apiKey: "TU_API", projectId: "TU_ID", appId: "TU_APP" };
-            firebase.initializeApp(config);
-            const cloud = firebase.firestore();
-            cloud.collection("users").onSnapshot(snap => {
-                document.getElementById('channelCount').innerText = snap.size;
-            });
-        } catch(e) { console.log("Firebase no configurado."); }
-    }
-
-    async function register() {
+    function register() {
         const u = document.getElementById('username').value;
-        if(u) {
-            localStorage.setItem('tubeUser', u);
-            try { firebase.firestore().collection("users").doc(u).set({ name: u }); } catch(e){}
-            location.reload();
-        }
+        if(u) { localStorage.setItem('tubeUser', u); location.reload(); }
     }
 
     function publish() {
         const f = document.getElementById('vFile').files;
         const t = document.getElementById('vTitle').value;
         if(f && t) {
-            const id = Date.now();
             const transaction = db.transaction(["videos"], "readwrite");
-            transaction.objectStore("videos").add({ id, title: t, file: f, timestamp: id, likes: 0, views: 0, comments: [] });
+            transaction.objectStore("videos").add({ id: Date.now(), title: t, file: f, timestamp: Date.now(), likes: 0, views: 0, comments: [] });
             transaction.oncomplete = () => location.reload();
         }
     }
 
     function renderMyVideos() {
-        const grid = document.getElementById('myVideosGrid');
-        grid.innerHTML = "";
+        const grid = document.getElementById('myVideosGrid'); grid.innerHTML = "";
         db.transaction(["videos"]).objectStore("videos").openCursor().onsuccess = e => {
             const cursor = e.target.result;
             if (cursor) {
                 const v = cursor.value;
                 const card = document.createElement('div');
-                card.className = 'card';
-                card.onclick = () => playVideo(v.id);
-                const gold = v.likes >= 100 ? 'gold-border' : '';
-                card.innerHTML = `<div class="thumb ${gold}" style="background:#222">▶</div><h4>${v.title}</h4><p>${v.views} vistas • ${getTimeAgo(v.timestamp)}</p>`;
-                grid.prepend(card);
-                cursor.continue();
+                card.className = 'card'; card.onclick = () => playVideo(v.id);
+                card.innerHTML = `<div class="thumb ${v.likes >= 100 ? 'gold-border' : ''}" style="background:#222">▶</div><h4>${v.title}</h4><p>${v.views} vistas</p>`;
+                grid.prepend(card); cursor.continue();
             }
         };
     }
 
     function playVideo(id) {
         db.transaction(["videos"]).objectStore("videos").get(id).onsuccess = e => {
-            const v = e.target.result;
-            currentVideoId = v.id;
+            const v = e.target.result; currentVideoId = v.id;
             document.getElementById('mainPlayer').src = URL.createObjectURL(v.file);
             document.getElementById('displayTitle').innerText = v.title;
-            document.getElementById('displayVistas').innerText = `${v.views} vistas • ${getTimeAgo(v.timestamp)}`;
+            document.getElementById('displayVistas').innerText = `${v.views} vistas`;
             document.getElementById('likeDisplay').innerText = v.likes;
             document.getElementById('commentsArea').style.display = 'block';
             renderComments(v.comments || []);
             document.getElementById('mainPlayer').play();
-            window.scrollTo(0,0);
         };
     }
 
     function postComment() {
         const text = document.getElementById('commentInput').value;
         const user = localStorage.getItem('tubeUser') || "Anónimo";
-        if(!text || !currentVideoId) return;
         const store = db.transaction(["videos"], "readwrite").objectStore("videos");
         store.get(currentVideoId).onsuccess = e => {
-            const v = e.target.result;
-            if(!v.comments) v.comments = [];
+            const v = e.target.result; if(!v.comments) v.comments = [];
             v.comments.push({ id: Date.now(), user, text, likes: 0 });
-            store.put(v);
-            document.getElementById('commentInput').value = "";
-            renderComments(v.comments);
+            store.put(v); document.getElementById('commentInput').value = ""; renderComments(v.comments);
         };
     }
 
     function renderComments(arr) {
-        const list = document.getElementById('commentsList');
-        list.innerHTML = "";
+        const list = document.getElementById('commentsList'); list.innerHTML = "";
         arr.forEach(c => {
-            const div = document.createElement('div');
-            div.className = 'comment-item';
-            div.innerHTML = `<p><b>@${c.user}</b>: ${c.text}</p>
-                <div class="comment-reacts" onclick="likeComment(${c.id})">👍 ${c.likes} | 👎</div>`;
-            list.prepend(div);
+            const div = document.createElement('div'); div.className = 'comment-item';
+            div.innerHTML = `<p><b>@${c.user}</b>: ${c.text}</p>`; list.prepend(div);
         });
     }
 
-    function likeComment(cId) {
-        const store = db.transaction(["videos"], "readwrite").objectStore("videos");
-        store.get(currentVideoId).onsuccess = e => {
-            const v = e.target.result;
-            const comment = v.comments.find(c => c.id === cId);
-            comment.likes++;
-            store.put(v);
-            renderComments(v.comments);
-        };
-    }
-
     function saveLike() {
-        if(!currentVideoId) return;
         const store = db.transaction(["videos"], "readwrite").objectStore("videos");
         store.get(currentVideoId).onsuccess = e => {
-            const v = e.target.result;
-            v.likes++;
-            if(v.likes === 100) { document.getElementById('achievement').style.display='block'; setTimeout(()=>document.getElementById('achievement').style.display='none', 5000); }
-            store.put(v);
-            document.getElementById('likeDisplay').innerText = v.likes;
-            renderMyVideos();
+            const v = e.target.result; v.likes++; store.put(v);
+            document.getElementById('likeDisplay').innerText = v.likes; renderMyVideos();
         };
     }
 
     function markAsWatched() {
-        if(!currentVideoId) return;
         const store = db.transaction(["videos"], "readwrite").objectStore("videos");
         store.get(currentVideoId).onsuccess = e => {
             const v = e.target.result; v.views++; store.put(v);
         };
     }
 
-    function getTimeAgo(t) {
-        const s = Math.floor((Date.now() - t) / 1000);
-        return s < 60 ? `hace ${s} seg` : s < 3600 ? `hace ${Math.floor(s/60)} min` : `hace ${Math.floor(s/3600)} h`;
-    }
-
-    function formatViews(n) { return n >= 1000000 ? (n/1000000).toFixed(1)+' M' : (n/1000).toFixed(0)+' k'; }
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-    function loadRec() {
-        const grid = document.getElementById('recommendGrid');
-        for(let i=0; i<4; i++) {
-            const v = Math.floor(Math.random()*2000000+445000);
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `<div class="thumb" style="background-image:url('https://picsum.photos{i}')"></div><h4>Global</h4><p>${formatViews(v)} vistas</p>`;
-            grid.appendChild(card);
-        }
-    }
-
-    function showStats() {
-        const u = localStorage.getItem('tubeUser');
-        let total = 0;
-        db.transaction(["videos"]).objectStore("videos").openCursor().onsuccess = e => {
-            const cursor = e.target.result;
-            if(cursor) { total += cursor.value.likes; cursor.continue(); }
-            else { document.getElementById('statsName').innerText = "Canal de " + u; document.getElementById('totalLikes').innerText = total; openModal('statsModal'); }
-        };
-    }
 </script>
 </body>
 </html>
