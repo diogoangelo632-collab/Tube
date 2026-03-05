@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego Salto 2026 - FIX FINAL</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+
+        /* Capas Principales */
+        .pantalla-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100;
+        }
+
+        .btn-interactivo {
+            padding: 12px 25px; font-size: 16px; cursor: pointer;
+            background: #000; color: white; border: none; border-radius: 8px; 
+            margin: 10px; z-index: 110; position: relative;
+        }
+
+        /* Botón Inferior Corregido */
+        .contenedor-inferior {
+            position: fixed; bottom: 30px; left: 50%;
+            transform: translateX(-50%); z-index: 120;
+        }
+
+        /* Modales */
+        .modal {
+            display: none; position: fixed; top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); width: 340px; 
+            max-height: 70vh; background: white; border: 2px solid black; 
+            padding: 25px; z-index: 200; border-radius: 15px; overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        /* Perfil y Juego */
+        .perfil-esquina { 
+            position: absolute; top: 20px; right: 20px; 
+            display: none; align-items: center; gap: 10px;
+            background: white; padding: 8px 15px; border-radius: 50px;
+            border: 1px solid #ddd; z-index: 150; cursor: pointer;
+        }
+        .linea-central { position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: black; transform: translateY(-50%); }
+        #cuadrado { position: absolute; left: 50px; width: 50px; height: 50px; border: 2px solid black; bottom: 50%; margin-bottom: 2px; background: white; z-index: 5; display: none; }
+        #triangulo { width: 0; height: 0; border-left: 25px solid transparent; border-right: 25px solid transparent; border-bottom: 50px solid black; position: absolute; bottom: 50%; margin-bottom: 2px; right: -60px; display: none; }
+        #marcador-puntos { position: absolute; top: 85px; right: 25px; font-size: 22px; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Botón Global (Siempre accesible) -->
+    <div class="contenedor-inferior">
+        <button class="btn-interactivo" id="btnAbrirGlobal" style="background:#28a745;">ve cuantas personas se estan uniendo</button>
+    </div>
+
+    <!-- Pantalla de Inicio -->
+    <div id="pantalla-inicio" class="pantalla-overlay">
+        <h1>DESAFÍO 2026</h1>
+        <div id="menu-juego" style="display:none;">
+            <button class="btn-interactivo" id="btnJugar" style="background:#28a745;">JUGAR</button>
+            <button class="btn-interactivo" id="btnTopAntiguos" style="background:#6c757d;">Top 120 Antiguos</button>
+        </div>
+        <button class="btn-interactivo" id="btnAbrirReg" style="background:#007bff;">Crear Usuario</button>
+    </div>
+
+    <!-- Perfil en Esquina -->
+    <div class="perfil-esquina" id="ui-esquina">
+        <span id="nombre-esquina" style="font-weight:bold;">Usuario</span>
+        <img src="https://www.w3schools.com" width="40" style="border-radius:50%">
+    </div>
+
+    <!-- Modales -->
+    <div id="modal-reg" class="modal">
+        <h3>Registrar Perfil</h3>
+        <input type="text" id="reg-nom-input" placeholder="Tu nombre..." style="width:100%; padding:10px; margin-bottom:10px;">
+        <input type="date" id="reg-fecha-input" style="width:100%; padding:10px; margin-bottom:10px;">
+        <button class="btn-interactivo" id="btnGuardar" style="width:100%; margin:0;">Guardar</button>
+    </div>
+
+    <div id="modal-global" class="modal">
+        <h3>Jugadores en Tiempo Real</h3>
+        <div id="contador-global" style="font-size:28px; font-weight:bold; color:#007bff; text-align:center; margin:20px 0;">15.049.574</div>
+        <button class="btn-interactivo" id="btnCerrarGlobal" style="width:100%; margin:0;">Cerrar</button>
+    </div>
+
+    <div id="modal-top-120" class="modal">
+        <h3>Historial 2009-2010</h3>
+        <ul id="lista-antiguos" style="list-style:none; padding:0; font-size:14px;"></ul>
+        <button class="btn-interactivo" id="btnCerrarTop" style="width:100%; margin:0;">Cerrar</button>
+    </div>
+
+    <!-- Juego -->
+    <div id="marcador-puntos">Puntos: 0</div>
+    <div id="cuadrado"></div>
+    <div id="triangulo"></div>
+    <div class="linea-central"></div>
+
+    <script>
+        // 1. Contador Global (Suma cada 0.5s)
+        let totalPersonas = 15049574;
+        setInterval(() => {
+            totalPersonas += 123;
+            document.getElementById('contador-global').innerText = totalPersonas.toLocaleString('es-ES');
+        }, 500);
+
+        // 2. Funciones de Clientes (Corregidas)
+        document.getElementById('btnAbrirGlobal').onclick = () => { document.getElementById('modal-global').style.display = 'block'; };
+        document.getElementById('btnCerrarGlobal').onclick = () => { document.getElementById('modal-global').style.display = 'none'; };
+        document.getElementById('btnAbrirReg').onclick = () => { document.getElementById('modal-reg').style.display = 'block'; };
+        document.getElementById('btnCerrarTop').onclick = () => { document.getElementById('modal-top-120').style.display = 'none'; };
+
+        // 3. Registro y Validación
+        document.getElementById('btnGuardar').onclick = () => {
+            const nombre = document.getElementById('reg-nom-input').value.trim();
+            const fecha = document.getElementById('reg-fecha-input').value;
+            const prohibidos = ["raylidasher", "domercash", "sumeprader", "tersa4477", "tushmen"];
+            
+            if (prohibidos.includes(nombre.toLowerCase())) { alert("Nombre en uso"); return; }
+            if (!fecha) { alert("Ingresa una fecha"); return; }
+
+            const hoy = new Date("2026-01-17");
+            const cumple = new Date(fecha);
+            let edad = hoy.getFullYear() - cumple.getFullYear();
+            if (edad < 7) { alert("Debes tener +7 años para jugar en 2026."); return; }
+
+            // Activar UI de Usuario
+            document.getElementById('nombre-esquina').innerText = nombre;
+            document.getElementById('ui-esquina').style.display = 'flex';
+            document.getElementById('modal-reg').style.display = 'none';
+            document.getElementById('btnAbrirReg').style.display = 'none';
+            document.getElementById('menu-juego').style.display = 'block';
+        };
+
+        // 4. Generar Top 120
+        document.getElementById('btnTopAntiguos').onclick = () => {
+            const lista = document.getElementById('lista-antiguos');
+            const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+            const diasM =;
+            let html = "", d = 19, m = 1, a = 2009;
+            for (let i = 1; i <= 120; i++) {
+                let n, fd, fm, fa;
+                if (i === 1) { n = "Seferbol1"; fd = 5; fm = "febrero"; fa = 2009; }
+                else if (i === 2) { n = "teshmen"; fd = 7; fm = "febrero"; fa = 2009; }
+                else if (i === 3) { n = "tertesman"; fd = 12; fm = "febrero"; fa = 2009; }
+                else if (i === 111) { d = 1; m = 0; a = 2010; n = "Lider_Alpha"; fd = 1; fm = "enero"; fa = 2010; }
+                else {
+                    n = "OldUser_" + i; d += 3;
+                    while (d > diasM[m]) { d -= diasM[m]; m++; if (m > 11) { m = 0; a++; } }
+                    fd = d; fm = meses[m]; fa = a;
+                }
+                html += `<li style="padding:5px 0; border-bottom:1px solid #eee;">${i}. <b>${n}</b> (${fd}/${fm}/${fa})</li>`;
+            }
+            lista.innerHTML = html;
+            document.getElementById('modal-top-120').style.display = 'block';
+        };
+
+        // 5. Motor del Juego
+        let activo = false, puntos = 0, y = 0, vy = 0, suelo = true, tx = -60, yaPuntuo = false;
+        document.getElementById('btnJugar').onclick = () => {
+            document.getElementById('pantalla-inicio').style.display = 'none';
+            document.getElementById('cuadrado').style.display = 'block';
+            document.getElementById('triangulo').style.display = 'block';
+            document.getElementById('marcador-puntos').style.display = 'block';
+            activo = true; puntos = 0; tx = -60;
+            document.getElementById('marcador-puntos').innerText = "Puntos: 0";
+            gameLoop();
+        };
+
+        function gameLoop() {
+            if (!activo) return;
+            if (!suelo) { vy -= 0.7; y += vy; if (y <= 0) { y = 0; suelo = true; } }
+            document.getElementById('cuadrado').style.transform = `translateY(${-y}px)`;
+            tx += 8; document.getElementById('triangulo').style.right = tx + 'px';
+            if (tx > window.innerWidth) { tx = -60; yaPuntuo = false; }
+            const rC = document.getElementById('cuadrado').getBoundingClientRect();
+            const rT = document.getElementById('triangulo').getBoundingClientRect();
+            if (rT.right < rC.left && !yaPuntuo) { puntos++; document.getElementById('marcador-puntos').innerText = "Puntos: " + puntos; yaPuntuo = true; }
+            if (rT.left < rC.right && rT.right > rC.left && rT.top < rC.bottom && rT.bottom > rC.top) {
+                activo = false; alert("Fin del Juego - Puntos: " + puntos);
+                document.getElementById('pantalla-inicio').style.display = 'flex';
+            }
+            requestAnimationFrame(gameLoop);
+        }
+        window.onkeydown = (e) => { if (activo && suelo && ['w','ArrowUp',' '].includes(e.key)) { vy = 13; suelo = false; } };
+    </script>
+</body>
+</html>
