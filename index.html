@@ -2,7 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Tube - Mi Canal Oficial</title>
+    <!-- ESTO ES LO QUE PIDE GOOGLE -->
+    <title>Tube - Mi Canal Oficial de Videos</title>
+    <meta name="description" content="Bienvenido a Tube, la plataforma personal para subir videos, comentar y ganar logros de oro. Creado por Diogo Angelo.">
+    <meta name="keywords" content="videos, tube, diogo angelo, canal, entretenimiento">
+    <meta name="author" content="Diogo Angelo">
+    <!-- TERMINA SEO -->
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background-color: #0f0f0f; color: white; font-family: 'Roboto', sans-serif; }
@@ -18,23 +24,24 @@
         .video-wrapper { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; overflow: hidden; }
         video { width: 100%; height: 100%; }
 
+        /* SECCIÓN ACERCA DE (Para que Google la indexe) */
+        .about-tube-box { background: #111; padding: 20px; border-radius: 12px; margin-top: 20px; border: 1px solid #333; }
+        .about-tube-box h2 { font-size: 1.2rem; color: #ff0000; margin-bottom: 10px; }
+        .about-tube-box p { font-size: 0.9rem; color: #ccc; line-height: 1.4; }
+
         .video-actions { margin-top: 15px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #333; padding-bottom: 15px; }
         .like-btn { background:#272727; border-radius:20px; padding:8px 15px; border:none; color:white; cursor:pointer; }
-
         .comments-section { margin-top: 20px; border-bottom: 1px solid #333; padding-bottom: 20px; }
         .comment-input { width: 100%; background: none; border: none; border-bottom: 1px solid #333; color: white; padding: 10px 0; outline: none; margin-bottom: 15px; }
         .comment-item { margin-bottom: 15px; background: #111; padding: 12px; border-radius: 8px; }
         .comment-footer { display: flex; gap: 15px; font-size: 0.8rem; color: #aaa; margin-top: 8px; cursor: pointer; }
-
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; margin-top: 20px; margin-bottom: 40px; }
         .card { cursor: pointer; }
         .thumb { width: 100%; aspect-ratio: 16/9; background: #222; border-radius: 10px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 2px solid transparent; background-size: cover; background-position: center; }
         .gold-border { border: 2px solid #ffd700 !important; box-shadow: 0 0 10px #ffd700; }
-
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; }
         .modal-box { background: #1e1e1e; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; text-align: center; }
         input { background: #121212; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; }
-        
         #achievement { display: none; position: fixed; top: 70px; right: 20px; background: linear-gradient(45deg, #ffd700, #ffa500); color: #000; padding: 15px 25px; border-radius: 10px; font-weight: bold; z-index: 3000; animation: slideIn 0.5s; }
         @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
     </style>
@@ -63,6 +70,13 @@
         <div><h1 id="displayTitle">Bienvenido a Tube</h1><p id="displayVistas" style="color:#aaa; font-size: 0.85rem; margin-top: 4px;">0 vistas • --</p></div>
         <button class="like-btn" onclick="saveLike()">👍 <span id="likeDisplay">0</span></button>
     </div>
+
+    <!-- ACERCA DE TUBE PARA GOOGLE -->
+    <section class="about-tube-box">
+        <h2>Acerca de esta plataforma</h2>
+        <p>Tube es un sitio web interactivo donde puedes subir tus videos, interactuar con comentarios y obtener logros especiales como el borde de oro al llegar a 100 likes. Todos tus datos se mantienen privados y seguros en tu navegador.</p>
+    </section>
+
     <div id="commentsArea" style="display:none; margin-top:20px;">
         <h3>Comentarios</h3>
         <input type="text" id="commentInput" class="comment-input" placeholder="Añade un comentario..." onkeypress="if(event.key === 'Enter') postComment()">
@@ -213,7 +227,6 @@
             grid.appendChild(card);
         }
     }
-
     window.onscroll = () => { if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) addMoreVideos(); };
 
     function showStats() {
